@@ -26,6 +26,8 @@ struct RootView: View {
         switch selection ?? .downloader {
         case .queue:
             QueueView()
+        case .downloader:
+            DownloaderView()
         case let section:
             PlaceholderToolView(section: section)
         }
