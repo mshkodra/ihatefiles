@@ -6,4 +6,5 @@ Built with Swift/SwiftUI, bundled `yt-dlp`/`ffmpeg`, and native `PDFKit`/`ImageI
 
 ## Setup
 
-Run `xcodegen generate` to produce `ihatefiles.xcodeproj` before opening/building — it's gitignored since it's fully derived from `project.yml`.
+1. Run `Resources/Scripts/fetch-binaries.sh` to download the vendored `yt-dlp`/`ffmpeg` binaries into `Resources/bin/` (gitignored, checksum-verified — see `Resources/VERSIONS.md` for what's pinned and why).
+2. Run `xcodegen generate` to produce `ihatefiles.xcodeproj` before opening/building — it's gitignored since it's fully derived from `project.yml`. The project also re-runs step 1 automatically as a build phase, so it's safe to skip manually, but running it once up front avoids the first build silently blocking on a download.
