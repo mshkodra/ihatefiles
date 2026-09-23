@@ -109,6 +109,18 @@ final class JobManagerTests: XCTestCase {
         XCTAssertEqual(manager.jobs.first(where: { $0.id == secondId })?.status, .done)
     }
 
+    func testEnqueueStoresParentId() async throws {
+        let manager = JobManager(downloadConcurrencyLimit: 2)
+        let parentId = UUID()
+        let childId = manager.enqueue(
+            kind: .youtubeVideo, input: "child",
+            runner: FakeRunner(tickCount: 2, tickDelayNanoseconds: 10_000_000),
+            parentId: parentId
+        )
+
+        XCTAssertEqual(manager.jobs.first(where: { $0.id == childId })?.parentId, parentId)
+    }
+
     // MARK: - Helpers
 
     private func waitUntil(timeout: TimeInterval, condition: () -> Bool) async throws {
