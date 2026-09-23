@@ -31,4 +31,14 @@ final class YtDlpProgressParserTests: XCTestCase {
         let line = "[download] video.mp4 has already been downloaded"
         XCTAssertNil(YtDlpProgressParser.parseProgress(from: line))
     }
+
+    func testExtractAudioPostprocessLineReturnsNil() {
+        let line = "[ExtractAudio] Destination: song.mp3"
+        XCTAssertNil(YtDlpProgressParser.parseProgress(from: line))
+    }
+
+    func testThumbnailsConvertorLineReturnsNil() {
+        let line = "[ThumbnailsConvertor] Converting thumbnail \"thumb.webp\" to jpg"
+        XCTAssertNil(YtDlpProgressParser.parseProgress(from: line))
+    }
 }
