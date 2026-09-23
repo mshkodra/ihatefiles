@@ -23,6 +23,16 @@ targets:
       - path: Resources
         excludes:
           - "CLAUDE.md"
+          - "bin/**"
+          - "Scripts/**"
+      - path: Resources/bin
+        type: folder
+        buildPhase: resources
+    preBuildScripts:
+      - name: Fetch vendored binaries
+        script: |
+                "$SRCROOT/Resources/Scripts/fetch-binaries.sh"
+        basedOnDependencyAnalysis: false
     settings:
       base:
         MARKETING_VERSION: "0.1.0"

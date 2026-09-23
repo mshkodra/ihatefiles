@@ -7,6 +7,7 @@ DerivedData/
 xcuserdata/
 *.xcworkspace/xcuserdata/
 ihatefiles.xcodeproj/
+Resources/bin/
 
 # Swift Package Manager
 .swiftpm/
