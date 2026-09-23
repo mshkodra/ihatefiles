@@ -1,12 +1,20 @@
 import SwiftUI
 import AppKit
 
-/// Video section: pick a file and convert it to H.264/AAC MP4 via the bundled
-/// ffmpeg, with real progress. Split/concat/overlay are separate operations
-/// added in a later phase — this view is structured so those can slot in
-/// alongside Convert without disturbing it.
+/// Video section: convert, split, concatenate, or overlay videos via the
+/// bundled ffmpeg, with real progress. An operation picker switches between
+/// Convert (inline below) and the Split/Concat/Overlay panels.
 struct VideoToolView: View {
+    enum Operation: String, CaseIterable, Identifiable {
+        case convert = "Convert"
+        case split = "Split"
+        case concat = "Concatenate"
+        case overlay = "Overlay"
+        var id: String { rawValue }
+    }
+
     @Environment(JobManager.self) private var jobManager
+    @State private var operation: Operation = .convert
     @State private var inputURL: URL?
 
     private var outputURL: URL? {
@@ -24,26 +32,12 @@ struct VideoToolView: View {
 
             operationPicker
 
-            HStack(spacing: 8) {
-                Button("Choose Video…", action: chooseInput)
-                    .buttonStyle(.bordered)
-                if let inputURL {
-                    Text(inputURL.lastPathComponent)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                        .truncationMode(.middle)
-                }
+            switch operation {
+            case .convert: convertPanel
+            case .split: VideoSplitPanel()
+            case .concat: VideoConcatPanel()
+            case .overlay: VideoOverlayPanel()
             }
-
-            if let outputURL {
-                Text("Saves as \(outputURL.lastPathComponent)")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-
-            Button("Convert to MP4", action: startConvert)
-                .buttonStyle(.borderedProminent)
-                .disabled(inputURL == nil)
 
             Spacer()
         }
@@ -52,13 +46,36 @@ struct VideoToolView: View {
         .navigationTitle("Video")
     }
 
-    /// Only Convert exists today; Split/Concat/Overlay are added as further
-    /// cases in a later phase, following the same enqueue pattern below.
-    @ViewBuilder
     private var operationPicker: some View {
-        Text("Convert")
-            .font(.subheadline)
-            .foregroundStyle(.secondary)
+        Picker("Operation", selection: $operation) {
+            ForEach(Operation.allCases) { Text($0.rawValue).tag($0) }
+        }
+        .pickerStyle(.segmented)
+        .frame(maxWidth: 420)
+    }
+
+    @ViewBuilder
+    private var convertPanel: some View {
+        HStack(spacing: 8) {
+            Button("Choose Video…", action: chooseInput)
+                .buttonStyle(.bordered)
+            if let inputURL {
+                Text(inputURL.lastPathComponent)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+            }
+        }
+
+        if let outputURL {
+            Text("Saves as \(outputURL.lastPathComponent)")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+
+        Button("Convert to MP4", action: startConvert)
+            .buttonStyle(.borderedProminent)
+            .disabled(inputURL == nil)
     }
 
     private func chooseInput() {
