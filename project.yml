@@ -35,3 +35,20 @@ targets:
         CFBundleDisplayName: ihatefiles
         LSApplicationCategoryType: public.app-category.utilities
         NSHumanReadableCopyright: ""
+    scheme:
+      testTargets:
+        - ihatefilesTests
+
+  ihatefilesTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: ihatefilesTests
+    dependencies:
+      - target: ihatefiles
+    settings:
+      base:
+        BUNDLE_LOADER: "$(TEST_HOST)"
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/ihatefiles.app/Contents/MacOS/ihatefiles"
+        GENERATE_INFOPLIST_FILE: true
+        CODE_SIGN_STYLE: Automatic
