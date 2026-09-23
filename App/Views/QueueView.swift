@@ -35,7 +35,7 @@ private struct QueueRow: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(job.input)
                     .lineLimit(1)
-                Text(job.kind.rawValue)
+                Text(job.kind.rawValue + (job.parentId != nil ? " · playlist" : ""))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

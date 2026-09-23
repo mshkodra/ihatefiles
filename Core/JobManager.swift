@@ -17,8 +17,8 @@ final class JobManager {
     }
 
     @discardableResult
-    func enqueue(kind: JobKind, input: String, runner: JobRunner) -> UUID {
-        let job = Job(kind: kind, input: input)
+    func enqueue(kind: JobKind, input: String, runner: JobRunner, parentId: UUID? = nil) -> UUID {
+        let job = Job(kind: kind, input: input, parentId: parentId)
         jobs.append(job)
         runners[job.id] = runner
 
