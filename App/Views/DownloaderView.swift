@@ -1,10 +1,11 @@
 import SwiftUI
 
-/// Downloader section: paste a URL and download it. YouTube URLs support
-/// MP4/MP3/thumbnail via the real yt-dlp runners, with playlists (detected
-/// via `list=`) resolved into one independent download Job per video.
-/// Twitter/X URLs probe available formats first, then let the user pick one
-/// (or auto-best) before downloading.
+/// Downloader section: paste a URL and download it, routed by `URLSniffer`.
+/// YouTube URLs support MP4/MP3/thumbnail via the real yt-dlp runners, with
+/// playlists (detected via `list=`) resolved into one independent download
+/// Job per video. Twitter/X URLs probe available formats first, then let the
+/// user pick one (or auto-best) before downloading. Anything else falls
+/// through to a generic best-format download via yt-dlp's own defaults.
 struct DownloaderView: View {
     @Environment(JobManager.self) private var jobManager
     @State private var urlText: String = ""
@@ -21,26 +22,44 @@ struct DownloaderView: View {
         urlText.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
+    private var route: DownloadRoute {
+        URLSniffer.route(for: trimmedURL)
+    }
+
     private var isPlaylist: Bool {
-        YouTubePlaylistDetector.isPlaylistURL(trimmedURL)
+        route == .youtubePlaylist
     }
 
     private var isTwitter: Bool {
-        TwitterURLDetector.isTwitterURL(trimmedURL)
+        route == .twitter
+    }
+
+    private var isGeneric: Bool {
+        route == .generic
+    }
+
+    private var sectionTitle: String {
+        switch route {
+        case .twitter: return "Twitter / X"
+        case .youtubeVideo, .youtubePlaylist: return "YouTube"
+        case .generic: return "Download"
+        }
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text(isTwitter ? "Twitter / X" : "YouTube")
+            Text(sectionTitle)
                 .font(.title2.bold())
 
-            TextField("Paste a YouTube or Twitter/X URL", text: $urlText)
+            TextField("Paste a URL to download", text: $urlText)
                 .textFieldStyle(.roundedBorder)
                 .onSubmit(primaryAction)
                 .disabled(isResolvingPlaylist || isProbingTwitter)
 
             if isTwitter {
                 twitterControls
+            } else if isGeneric {
+                genericControls
             } else {
                 youtubeControls
             }
@@ -109,6 +128,15 @@ struct DownloaderView: View {
     }
 
     @ViewBuilder
+    private var genericControls: some View {
+        HStack(spacing: 8) {
+            Button("Download", action: startGenericDownload)
+                .buttonStyle(.borderedProminent)
+                .disabled(trimmedURL.isEmpty)
+        }
+    }
+
+    @ViewBuilder
     private var twitterControls: some View {
         HStack(spacing: 8) {
             Button("Fetch Formats", action: startTwitterProbe)
@@ -127,11 +155,15 @@ struct DownloaderView: View {
     }
 
     private func primaryAction() {
-        if isTwitter {
-            startTwitterProbe()
-        } else {
-            startMP4Download()
+        switch route {
+        case .twitter: startTwitterProbe()
+        case .generic: startGenericDownload()
+        case .youtubeVideo, .youtubePlaylist: startMP4Download()
         }
+    }
+
+    private func startGenericDownload() {
+        enqueue(kind: .genericURL) { GenericURLRunner(url: $0) }
     }
 
     private func startMP4Download() {
