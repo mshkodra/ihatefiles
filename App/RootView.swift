@@ -28,6 +28,8 @@ struct RootView: View {
             QueueView()
         case .downloader:
             DownloaderView()
+        case .video:
+            VideoToolView()
         case let section:
             PlaceholderToolView(section: section)
         }
