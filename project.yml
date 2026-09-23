@@ -1,0 +1,37 @@
+name: ihatefiles
+options:
+  bundleIdPrefix: com.mateoshkodra
+  deploymentTarget:
+    macOS: "15.0"
+targets:
+  ihatefiles:
+    type: application
+    platform: macOS
+    sources:
+      - path: App
+        excludes:
+          - "CLAUDE.md"
+      - path: Core
+        excludes:
+          - "CLAUDE.md"
+      - path: Downloaders
+        excludes:
+          - "CLAUDE.md"
+      - path: Converters
+        excludes:
+          - "CLAUDE.md"
+      - path: Resources
+        excludes:
+          - "CLAUDE.md"
+    settings:
+      base:
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        ENABLE_HARDENED_RUNTIME: true
+        CODE_SIGN_STYLE: Automatic
+    info:
+      path: App/Info.plist
+      properties:
+        CFBundleDisplayName: ihatefiles
+        LSApplicationCategoryType: public.app-category.utilities
+        NSHumanReadableCopyright: ""

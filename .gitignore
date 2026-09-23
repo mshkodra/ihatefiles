@@ -6,6 +6,7 @@ DerivedData/
 *.xcscmblueprint
 xcuserdata/
 *.xcworkspace/xcuserdata/
+ihatefiles.xcodeproj/
 
 # Swift Package Manager
 .swiftpm/
