@@ -25,6 +25,7 @@ A native macOS app (Swift/SwiftUI) that replaces a folder of one-off terminal sc
 | Downloaders | YouTube/Twitter/generic download runners wrapping bundled yt-dlp |
 | Converters | Video/image/PDF conversion runners (ffmpeg, ImageIO, PDFKit) |
 | Resources | Bundled binaries (yt-dlp, ffmpeg) and static app assets |
+| docs | Implementation plans and research findings |
 
 Directories with their own CLAUDE.md have scoped rules — read that file before working inside them.
 
