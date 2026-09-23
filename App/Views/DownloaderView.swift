@@ -1,7 +1,8 @@
 import SwiftUI
 
-/// Downloader section: paste a YouTube URL, download as MP4 via the real
-/// yt-dlp runner. MP3/thumbnail/playlist/Twitter formats land in later phases.
+/// Downloader section: paste a YouTube URL, download as MP4/MP3 or extract
+/// just the thumbnail via the real yt-dlp runners. Playlist/Twitter formats
+/// land in later phases.
 struct DownloaderView: View {
     @Environment(JobManager.self) private var jobManager
     @State private var urlText: String = ""
@@ -17,22 +18,20 @@ struct DownloaderView: View {
 
             TextField("Paste a YouTube video URL", text: $urlText)
                 .textFieldStyle(.roundedBorder)
-                .onSubmit(startDownload)
+                .onSubmit(startMP4Download)
 
             HStack(spacing: 8) {
-                Button("Download as MP4", action: startDownload)
+                Button("Download as MP4", action: startMP4Download)
                     .buttonStyle(.borderedProminent)
                     .disabled(trimmedURL.isEmpty)
 
-                Button("Download as MP3") {}
+                Button("Download as MP3", action: startMP3Download)
                     .buttonStyle(.bordered)
-                    .disabled(true)
-                    .help("Coming in a later phase")
+                    .disabled(trimmedURL.isEmpty)
 
-                Button("Extract Thumbnail") {}
+                Button("Extract Thumbnail", action: startThumbnailDownload)
                     .buttonStyle(.bordered)
-                    .disabled(true)
-                    .help("Coming in a later phase")
+                    .disabled(trimmedURL.isEmpty)
             }
 
             Text("Playlist and Twitter/X URLs aren't supported yet.")
@@ -46,13 +45,21 @@ struct DownloaderView: View {
         .navigationTitle("Downloader")
     }
 
-    private func startDownload() {
+    private func startMP4Download() {
+        enqueue(kind: .youtubeVideo) { YouTubeVideoRunner(url: $0, format: .mp4) }
+    }
+
+    private func startMP3Download() {
+        enqueue(kind: .youtubeAudio) { YouTubeVideoRunner(url: $0, format: .mp3) }
+    }
+
+    private func startThumbnailDownload() {
+        enqueue(kind: .youtubeThumbnail) { ThumbnailRunner(url: $0) }
+    }
+
+    private func enqueue(kind: JobKind, makeRunner: (String) -> JobRunner) {
         guard !trimmedURL.isEmpty else { return }
-        jobManager.enqueue(
-            kind: .youtubeVideo,
-            input: trimmedURL,
-            runner: YouTubeVideoRunner(url: trimmedURL)
-        )
+        jobManager.enqueue(kind: kind, input: trimmedURL, runner: makeRunner(trimmedURL))
         urlText = ""
     }
 }
