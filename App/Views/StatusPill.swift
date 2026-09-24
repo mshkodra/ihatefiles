@@ -4,7 +4,8 @@ struct StatusPill: View {
     let status: JobStatus
 
     var body: some View {
-        Text(label)
+        Label(label, systemImage: symbolName)
+            .labelStyle(.titleAndIcon)
             .font(.caption.weight(.medium))
             .padding(.horizontal, 8)
             .padding(.vertical, 3)
@@ -22,6 +23,9 @@ struct StatusPill: View {
         }
     }
 
+    // Matches the approved mockup's palette: accent=running, neutral
+    // gray=queued, green=done, red=failed. Cancelled gets its own orange
+    // so it reads distinct from a hard failure at a glance.
     private var color: Color {
         switch status {
         case .queued: return .gray
@@ -29,6 +33,16 @@ struct StatusPill: View {
         case .done: return .green
         case .failed: return .red
         case .cancelled: return .orange
+        }
+    }
+
+    private var symbolName: String {
+        switch status {
+        case .queued: return "clock"
+        case .running: return "arrow.triangle.2.circlepath"
+        case .done: return "checkmark.circle.fill"
+        case .failed: return "xmark.circle.fill"
+        case .cancelled: return "slash.circle"
         }
     }
 }

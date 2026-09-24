@@ -1,25 +1,33 @@
 import SwiftUI
 
-/// Flat reverse-chronological job list. Grouped sections (In Progress / Needs Attention /
-/// Today / Earlier) are deferred to a later phase — this phase just proves the live binding.
+/// Grouped queue list (In Progress / Needs Attention / Today / Earlier) matching
+/// the approved UI mockup: https://claude.ai/artifact/VaBwtnhGdWYxGps49FPSpH
 struct QueueView: View {
     @Environment(JobManager.self) private var jobManager
 
-    private var sortedJobs: [Job] {
-        jobManager.jobs.sorted { $0.updatedAt > $1.updatedAt }
+    private var groups: [(group: QueueGrouping.Group, jobs: [Job])] {
+        QueueGrouping.grouped(jobManager.jobs)
     }
 
     var body: some View {
         Group {
-            if sortedJobs.isEmpty {
+            if groups.isEmpty {
                 ContentUnavailableView(
                     "No jobs yet",
                     systemImage: "tray",
                     description: Text("Downloads and conversions you start will show up here.")
                 )
             } else {
-                List(sortedJobs) { job in
-                    QueueRow(job: job)
+                List {
+                    ForEach(groups, id: \.group) { entry in
+                        Section {
+                            ForEach(entry.jobs) { job in
+                                QueueRow(job: job)
+                            }
+                        } header: {
+                            GroupHeader(group: entry.group, count: entry.jobs.count)
+                        }
+                    }
                 }
             }
         }
@@ -49,6 +57,41 @@ struct QueueView: View {
         }
     }
     #endif
+}
+
+/// Section header reading In Progress / Needs Attention as more prominent
+/// than the historical Today / Earlier groups, per the mockup's intent.
+private struct GroupHeader: View {
+    let group: QueueGrouping.Group
+    let count: Int
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Image(systemName: symbolName)
+                .foregroundStyle(color)
+            Text(group.rawValue)
+            Spacer()
+            Text("\(count)")
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private var symbolName: String {
+        switch group {
+        case .inProgress: return "arrow.triangle.2.circlepath"
+        case .needsAttention: return "exclamationmark.triangle.fill"
+        case .today: return "checkmark.circle"
+        case .earlier: return "clock"
+        }
+    }
+
+    private var color: Color {
+        switch group {
+        case .inProgress: return .accentColor
+        case .needsAttention: return .red
+        case .today, .earlier: return .secondary
+        }
+    }
 }
 
 private struct QueueRow: View {
