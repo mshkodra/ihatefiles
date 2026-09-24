@@ -7,7 +7,12 @@ import Observation
 @Observable
 final class JobManager {
     private(set) var jobs: [Job] = []
-    var downloadConcurrencyLimit: Int
+    /// Changing this (e.g. from Settings) immediately starts any newly
+    /// affordable queued downloads — not just on the next unrelated
+    /// enqueue/finish event — so a live cap increase takes effect right away.
+    var downloadConcurrencyLimit: Int {
+        didSet { startNextQueuedDownloadIfSlotAvailable() }
+    }
 
     private var runners: [UUID: JobRunner] = [:]
     private var tasks: [UUID: Task<Void, Never>] = [:]
@@ -58,10 +63,15 @@ final class JobManager {
         jobs.filter { $0.kind.isDownload && $0.status == .running }.count
     }
 
+    /// Starts as many queued downloads as there are free slots for — usually
+    /// just one (a single job finished/cancelled), but a live cap increase
+    /// from Settings can free several slots at once, so this fills all of
+    /// them rather than only the first.
     private func startNextQueuedDownloadIfSlotAvailable() {
-        guard runningDownloadCount() < downloadConcurrencyLimit else { return }
-        guard let next = jobs.first(where: { $0.kind.isDownload && $0.status == .queued }) else { return }
-        start(jobId: next.id)
+        while runningDownloadCount() < downloadConcurrencyLimit,
+              let next = jobs.first(where: { $0.kind.isDownload && $0.status == .queued }) {
+            start(jobId: next.id)
+        }
     }
 
     private func start(jobId: UUID) {

@@ -33,7 +33,8 @@ enum YouTubePlaylistResolver {
     static func resolveAndEnqueue(
         playlistURL: String,
         format: DownloadFormat,
-        jobManager: JobManager
+        jobManager: JobManager,
+        outputDirectory: URL? = nil
     ) async throws -> Int {
         let entries = try await fetchEntries(playlistURL: playlistURL)
         guard !entries.isEmpty else { throw EmptyPlaylistError() }
@@ -45,7 +46,7 @@ enum YouTubePlaylistResolver {
             jobManager.enqueue(
                 kind: kind,
                 input: entry.title,
-                runner: YouTubeVideoRunner(url: videoURL, format: format),
+                runner: YouTubeVideoRunner(url: videoURL, format: format, outputDirectory: outputDirectory),
                 parentId: parentId
             )
         }

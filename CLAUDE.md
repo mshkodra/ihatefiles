@@ -11,9 +11,9 @@ A native macOS app (Swift/SwiftUI) that replaces a folder of one-off terminal sc
 
 ## Commands
 
-- Install: open `ihatefiles.xcodeproj` (or `.xcworkspace`) in Xcode — no package manager step yet
-- Run: build and run from Xcode (⌘R)
-- Test: run the test target from Xcode (⌘U)
+- Install: `xcodegen generate` to produce `ihatefiles.xcodeproj` (it's gitignored — `project.yml` is the source of truth), then open it in Xcode
+- Run: build and run from Xcode (⌘R), or `xcodebuild -scheme ihatefiles build`
+- Test: ⌘U in Xcode, or `xcodebuild -scheme ihatefiles test`
 - Lint: none configured yet
 
 ## Directory map
@@ -35,7 +35,14 @@ Source files are capped at 300 lines. This is enforced by a PreToolUse hook (`.c
 
 ## Non-obvious patterns
 
-<!-- Fill in as real decisions get made — the highest-value content in this file. Things like "why X instead of the obvious Y", intentional deviations from convention, gotchas a new contributor (or agent) would otherwise rediscover the hard way. -->
+- **App Sandbox is off.** The app's whole job is spawning arbitrary subprocesses against user-chosen files anywhere on disk — sandboxing that cleanly needs security-scoped bookmarks/XPC helpers, with no payoff until (if ever) shipping via the App Store.
+- **`ihatefiles.xcodeproj` is gitignored and generated.** `project.yml` (XcodeGen) is the single source of truth, since XcodeGen can't produce Xcode 16's auto-syncing folder groups — every new file needs a fresh `xcodegen generate`, and committing the generated project would mean a noisy mechanical diff on every phase's changes.
+- **Vendored `ffmpeg` is arm64-only and GPL v2+, not LGPL.** No genuine LGPL arm64 build was actually available when sourced (Phase 3) — accepted for personal use; revisit (source or build a true LGPL binary) only if the app is ever distributed to other people, since GPL obligations kick in on distribution, not personal use.
+- **No `ffprobe` is vendored.** `VideoDurationProbe`/`VideoDimensionsProbe` parse ffmpeg's own stderr (`Duration:` / `Stream #...Video:...WIDTHxHEIGHT` lines) instead of shelling to a second binary — ffmpeg alone is sufficient for duration/dimension probing here.
+- **Video overlay is intentionally top-right, not top-left.** The original Python script's comments said "top-left" but its actual math placed the overlay top-right with a 20px margin — the rewrite standardizes on the real (top-right) behavior and drops the stale comment.
+- **PDF image-append can't overwrite its source.** `ImageToPDFRunner` throws if the output path equals an existing-PDF input path, making the old script's silent-overwrite bug structurally impossible rather than just documented against.
+- **Concurrency cap changes take effect live.** `JobManager.downloadConcurrencyLimit` has a `didSet` that immediately starts any newly-affordable queued downloads — changing it from Settings doesn't wait for an unrelated enqueue/finish event to notice.
+- **Workflow: no PRs.** Early phases used branch+PR; from Phase 7 onward the project settled into committing straight to `master` for faster unattended iteration through the phased plan.
 
 ## Adding a new module
 

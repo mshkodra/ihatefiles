@@ -22,7 +22,7 @@ struct QueueView: View {
                     ForEach(groups, id: \.group) { entry in
                         Section {
                             ForEach(entry.jobs) { job in
-                                QueueRow(job: job)
+                                QueueRow(job: job, onCancel: { jobManager.cancel(jobId: job.id) })
                             }
                         } header: {
                             GroupHeader(group: entry.group, count: entry.jobs.count)
@@ -96,6 +96,9 @@ private struct GroupHeader: View {
 
 private struct QueueRow: View {
     let job: Job
+    let onCancel: () -> Void
+
+    private var isCancellable: Bool { job.status == .running || job.status == .queued }
 
     var body: some View {
         HStack {
@@ -112,6 +115,14 @@ private struct QueueRow: View {
                     .frame(width: 80)
             }
             StatusPill(status: job.status)
+            if isCancellable {
+                Button(action: onCancel) {
+                    Image(systemName: "xmark.circle.fill")
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(.secondary)
+                .help("Cancel")
+            }
         }
         .padding(.vertical, 2)
     }

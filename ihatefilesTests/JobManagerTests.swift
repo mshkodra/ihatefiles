@@ -121,6 +121,32 @@ final class JobManagerTests: XCTestCase {
         XCTAssertEqual(manager.jobs.first(where: { $0.id == childId })?.parentId, parentId)
     }
 
+    /// Simulates what SettingsView's concurrency stepper does at runtime:
+    /// raising `downloadConcurrencyLimit` on an already-running manager
+    /// should immediately promote queued downloads into newly-freed slots,
+    /// not wait for an unrelated enqueue/finish event to notice.
+    func testRaisingConcurrencyLimitLiveStartsQueuedDownloads() async throws {
+        let manager = JobManager(downloadConcurrencyLimit: 1)
+        for _ in 0..<3 {
+            manager.enqueue(
+                kind: .youtubeVideo, input: "url",
+                runner: FakeRunner(tickCount: 50, tickDelayNanoseconds: 20_000_000)
+            )
+        }
+
+        try await waitUntil(timeout: 2) {
+            manager.jobs.filter { $0.status == .running }.count == 1
+        }
+        XCTAssertEqual(manager.jobs.filter { $0.status == .queued }.count, 2)
+
+        manager.downloadConcurrencyLimit = 3
+
+        try await waitUntil(timeout: 2) {
+            manager.jobs.filter { $0.status == .running }.count == 3
+        }
+        XCTAssertEqual(manager.jobs.filter { $0.status == .queued }.count, 0)
+    }
+
     // MARK: - Helpers
 
     private func waitUntil(timeout: TimeInterval, condition: () -> Bool) async throws {

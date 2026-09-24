@@ -87,7 +87,11 @@ struct DownloaderView: View {
                     jobManager.enqueue(
                         kind: .twitter,
                         input: twitterURLBeingHandled,
-                        runner: TwitterDownloadRunner(url: twitterURLBeingHandled, formatId: formatId)
+                        runner: TwitterDownloadRunner(
+                            url: twitterURLBeingHandled,
+                            formatId: formatId,
+                            outputDirectory: AppSettings.currentOutputDirectoryURL
+                        )
                     )
                     showTwitterPicker = false
                     urlText = ""
@@ -163,14 +167,18 @@ struct DownloaderView: View {
     }
 
     private func startGenericDownload() {
-        enqueue(kind: .genericURL) { GenericURLRunner(url: $0) }
+        enqueue(kind: .genericURL) {
+            GenericURLRunner(url: $0, outputDirectory: AppSettings.currentOutputDirectoryURL)
+        }
     }
 
     private func startMP4Download() {
         if isPlaylist {
             startPlaylistDownload(format: .mp4)
         } else {
-            enqueue(kind: .youtubeVideo) { YouTubeVideoRunner(url: $0, format: .mp4) }
+            enqueue(kind: .youtubeVideo) {
+                YouTubeVideoRunner(url: $0, format: .mp4, outputDirectory: AppSettings.currentOutputDirectoryURL)
+            }
         }
     }
 
@@ -178,12 +186,16 @@ struct DownloaderView: View {
         if isPlaylist {
             startPlaylistDownload(format: .mp3)
         } else {
-            enqueue(kind: .youtubeAudio) { YouTubeVideoRunner(url: $0, format: .mp3) }
+            enqueue(kind: .youtubeAudio) {
+                YouTubeVideoRunner(url: $0, format: .mp3, outputDirectory: AppSettings.currentOutputDirectoryURL)
+            }
         }
     }
 
     private func startThumbnailDownload() {
-        enqueue(kind: .youtubeThumbnail) { ThumbnailRunner(url: $0) }
+        enqueue(kind: .youtubeThumbnail) {
+            ThumbnailRunner(url: $0, outputDirectory: AppSettings.currentOutputDirectoryURL)
+        }
     }
 
     private func enqueue(kind: JobKind, makeRunner: (String) -> JobRunner) {
@@ -200,7 +212,10 @@ struct DownloaderView: View {
             defer { isResolvingPlaylist = false }
             do {
                 _ = try await YouTubePlaylistResolver.resolveAndEnqueue(
-                    playlistURL: url, format: format, jobManager: jobManager
+                    playlistURL: url,
+                    format: format,
+                    jobManager: jobManager,
+                    outputDirectory: AppSettings.currentOutputDirectoryURL
                 )
                 urlText = ""
             } catch {
