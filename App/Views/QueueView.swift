@@ -24,7 +24,31 @@ struct QueueView: View {
             }
         }
         .navigationTitle("Queue")
+        #if DEBUG
+        .toolbar {
+            ToolbarItem {
+                Button("Enqueue Sample Jobs", action: enqueueSampleJobs)
+            }
+        }
+        #endif
     }
+
+    #if DEBUG
+    /// Populates the queue with a mix of download/conversion kinds and
+    /// simulated progress, for exercising the live queue UI (concurrency
+    /// capping, grouping, status colors) without running real tools.
+    private func enqueueSampleJobs() {
+        let downloads: [JobKind] = [.youtubeVideo, .youtubePlaylist, .twitter, .genericURL, .youtubeVideo]
+        let conversions: [JobKind] = [.videoConvert, .imageConvert, .pdfMerge, .videoSplit, .videoConcat]
+
+        for (index, kind) in downloads.enumerated() {
+            jobManager.enqueue(kind: kind, input: "sample-\(kind.rawValue)-\(index)", runner: FakeJobRunner())
+        }
+        for (index, kind) in conversions.enumerated() {
+            jobManager.enqueue(kind: kind, input: "sample-\(kind.rawValue)-\(index)", runner: FakeJobRunner())
+        }
+    }
+    #endif
 }
 
 private struct QueueRow: View {

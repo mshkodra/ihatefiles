@@ -1,8 +1,8 @@
 import Foundation
 
 /// App-target equivalent of the test target's FakeRunner — simulates progress over a
-/// handful of ticks so the Queue/ProgressStrip UI has real jobs to react to before any
-/// yt-dlp/ffmpeg runner exists. Debug-only: wired up from PlaceholderToolView.
+/// handful of ticks so the Queue/ProgressStrip UI has synthetic jobs to react to.
+/// Debug-only: wired up from QueueView's "Enqueue Sample Jobs" button.
 final class FakeJobRunner: JobRunner, @unchecked Sendable {
     enum Outcome {
         case succeed

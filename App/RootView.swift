@@ -32,8 +32,8 @@ struct RootView: View {
             VideoToolView()
         case .image:
             ImageToolView()
-        case let section:
-            PlaceholderToolView(section: section)
+        case .pdf:
+            PDFToolView()
         }
     }
 }
