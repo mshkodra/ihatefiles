@@ -30,6 +30,8 @@ struct RootView: View {
             DownloaderView()
         case .video:
             VideoToolView()
+        case .image:
+            ImageToolView()
         case let section:
             PlaceholderToolView(section: section)
         }

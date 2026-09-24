@@ -16,4 +16,5 @@ Runners for video, image, and PDF operations: video convert/split/concat/overlay
 
 ## Non-obvious patterns
 
-<!-- Fill in as decisions get made for this module specifically. -->
+- `ImageConvertRunner` jumps progress straight from 0 to 1 on completion rather than reporting intermediate values. This is intentional, not a bug: ImageIO/CoreGraphics operations are synchronous with no fine-grained progress signal to parse, unlike ffmpeg's `-progress pipe:1` or yt-dlp's percentage lines. Don't try to fake interpolated progress for native (non-subprocess) runners.
+- Converting to JPEG explicitly flattens alpha onto a chosen background color (white, by default) rather than leaving it undefined or inheriting the old Python script's `PIL.Image.convert("RGB")` behavior, which silently composited onto black.
